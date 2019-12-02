@@ -1,0 +1,50 @@
+sudo: false
+language: java
+jdk:
+  - oraclejdk9
+services:
+  - postgresql
+branches:
+  only:
+    - master
+    - develop
+matrix:
+  include:
+      -
+        before_install:
+          - "cd user-service"
+          - "chmod +x gradlew"
+        before_script:
+          - export TZ=Europe/Moscow
+          - psql -U postgres -f database/init.sql
+        script: ./gradlew clean test
+        after_script: ./gradlew clean build
+      -
+        before_install:
+          - "cd exam-service"
+          - "chmod +x gradlew"
+        before_script:
+          - export TZ=Europe/Moscow
+          - psql -U postgres -f database/init.sql
+        script: ./gradlew clean test
+        after_script: ./gradlew clean build
+      -
+        before_install:
+          - "cd result-service"
+          - "chmod +x gradlew"
+        before_script:
+          - export TZ=Europe/Moscow
+          - psql -U postgres -f database/init.sql
+        script: ./gradlew clean test
+        after_script: ./gradlew clean build
+      -
+        before_install:
+          - "cd gateway"
+          - "chmod +x gradlew"
+        script: ./gradlew clean test
+        after_script: ./gradlew clean build
+
+        after_success:
+          - "cd .."
+notifications:
+  email: false
