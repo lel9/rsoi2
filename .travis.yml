@@ -41,7 +41,7 @@ matrix:
         before_install:
           - "cd gateway"
           - "chmod +x gradlew"
-        script: ./gradlew clean test
+        script: ./gradlew test
         after_script: ./gradlew clean build
 
         after_success:
