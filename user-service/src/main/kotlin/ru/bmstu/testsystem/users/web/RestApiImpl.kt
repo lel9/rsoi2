@@ -5,11 +5,13 @@ import org.springframework.beans.propertyeditors.CustomDateEditor
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.WebDataBinder
 import org.springframework.web.bind.annotation.*
+import org.springframework.data.domain.Page
 import ru.bmstu.testsystem.users.model.RegistrationData
 import ru.bmstu.testsystem.users.model.UserData
 import ru.bmstu.testsystem.users.service.UserServiceImpl
 import java.util.*
 import java.text.DateFormat
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("/api/v1/user")
@@ -35,20 +37,20 @@ class RestApiImpl {
     @GetMapping("/get")
     @ResponseStatus(HttpStatus.OK)
     fun getAllUsers(@RequestParam(value = "page", defaultValue = "0", required = false) page: Int,
-                    @RequestParam(value = "limit", defaultValue = "12", required = false) limit: Int): List<UserData> {
+                    @RequestParam(value = "limit", defaultValue = "12", required = false) limit: Int): Page<UserData> {
         return userService.getAllUsers(page, limit)
     }
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    fun registerUser(@RequestBody rd: RegistrationData): UserData {
+    fun registerUser(@RequestBody @Valid rd: RegistrationData): UserData {
         val user = userService.registerUser(rd)
         return user
     }
 
     @PostMapping("/edit")
     @ResponseStatus(HttpStatus.OK)
-    fun editProfile(@RequestBody userData: UserData): UserData {
+    fun editProfile(@RequestBody @Valid userData: UserData): UserData {
         val updatedUser = userService.updateUser(userData)
         return updatedUser
     }

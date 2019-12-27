@@ -3,6 +3,7 @@ package ru.bmstu.testsystem.exams.web
 import ru.bmstu.testsystem.exams.model.ExamDataIn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.propertyeditors.CustomDateEditor
+import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.WebDataBinder
 import org.springframework.web.bind.annotation.*
@@ -13,6 +14,7 @@ import ru.bmstu.testsystem.exams.model.ExamDataOut
 import ru.bmstu.testsystem.exams.model.ExamDataWithAnsOut
 import ru.bmstu.testsystem.exams.service.ExamServiceImpl
 
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("/api/v1/exam")
@@ -45,13 +47,13 @@ class RestApiImpl {
     @GetMapping("/get")
     @ResponseStatus(HttpStatus.OK)
     fun getAll(@RequestParam(value = "page", defaultValue = "0") page: Int,
-               @RequestParam(value = "limit", defaultValue = "12") limit: Int) : List<ExamDataOut> {
+               @RequestParam(value = "limit", defaultValue = "12") limit: Int) : Page<ExamDataOut> {
         return examService.getAllExams(page, limit)
     }
 
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.CREATED)
-    fun addExam(@RequestBody  exam: ExamDataIn): ExamDataOut {
+    fun addExam(@RequestBody @Valid exam: ExamDataIn): ExamDataOut {
         val addExam = examService.addExam(exam)
         return addExam
     }
@@ -59,6 +61,7 @@ class RestApiImpl {
     @DeleteMapping("/remove/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeExam(@PathVariable  id: String) {
+        System.out.println(UUID.fromString(id))
         examService.removeExam(UUID.fromString(id))
     }
 
@@ -66,6 +69,12 @@ class RestApiImpl {
     @ResponseStatus(HttpStatus.OK)
     fun incPasses(@PathVariable id: String) : ExamDataOut{
         return examService.incPasses(UUID.fromString(id))
+    }
+
+    @PostMapping("/dec/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    fun decPasses(@PathVariable id: String) : ExamDataOut{
+        return examService.decPasses(UUID.fromString(id))
     }
 
 }

@@ -16,7 +16,7 @@ interface ExamRepository : CrudRepository<Exam, UUID> {
 
     fun findByIsDeleted(status: Boolean): List<Exam>
 
-    fun findByIsDeleted(status: Boolean, pageable: Pageable): List<Exam>
+    fun findByIsDeleted(status: Boolean, pageable: Pageable): Page<Exam>
 
     @Modifying
     @Query("update exams set is_deleted = TRUE where id = ?1",

@@ -3,6 +3,7 @@
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.WebRequest
@@ -16,6 +17,15 @@ import ru.bmstu.testsystem.users.model.GenericResponse
 class RestHandler : ResponseEntityExceptionHandler() {
 
     // 400
+    override protected fun handleMethodArgumentNotValid(ex: MethodArgumentNotValidException,
+                                                        headers:HttpHeaders,
+                                                        status:HttpStatus,
+                                                        request:WebRequest):ResponseEntity<Any> {
+        val result = ex.getBindingResult()
+        val bodyOfResponse = GenericResponse(result.getAllErrors(), "Invalid" + result.getObjectName())
+        return handleExceptionInternal(ex, bodyOfResponse, HttpHeaders(), HttpStatus.BAD_REQUEST, request)
+    }
+
     @ExceptionHandler(value = [(NoUserException::class)])
     fun handleNoSuchUser(ex: NoUserException, request: WebRequest): ResponseEntity<Any> {
         val bodyOfResponse = GenericResponse(ex.message, "NoSuchUser")

@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.*
 import ru.bmstu.testsystem.gateway.model.ErrorData
 import ru.bmstu.testsystem.gateway.model.RegistrationData
 import ru.bmstu.testsystem.gateway.model.UserData
+import ru.bmstu.testsystem.gateway.web.util.CircuitBreaker
 import ru.bmstu.testsystem.gateway.web.util.ProxyService
 import java.util.*
 import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 
 
 @RestController
@@ -19,6 +21,9 @@ import javax.servlet.http.HttpServletRequest
 class UsersRestApiProxy {
     @Autowired
     private lateinit var proxyService: ProxyService
+
+    @Autowired
+    private lateinit var breaker: CircuitBreaker
 
     @GetMapping("/user/get")
     @ApiOperation(value = "Get all users", response = List::class)
@@ -30,7 +35,7 @@ class UsersRestApiProxy {
                  @ApiParam(value = "limit", required = false, defaultValue = "12")
                  @RequestParam(value = "limit", required = false, defaultValue = "12") limit: Int,
                  request: HttpServletRequest): ResponseEntity<String> {
-        return proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8081, "/api/v1/user/get")
+        return breaker.action(proxyService, null, HttpMethod.GET, request, "localhost", 8081, "/api/v1/user/get")
     }
 
     @GetMapping("/user/get/{id}")
@@ -40,7 +45,8 @@ class UsersRestApiProxy {
         ApiResponse(code = 404, message = "User not found", response = ErrorData::class),
         ApiResponse(code = 400, message = "Bad request", response = ErrorData::class)
     ])
-    fun getUserByName(@PathVariable id: UUID, request: HttpServletRequest): ResponseEntity<String> {
+    fun getUserByName(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<String> {
+        UUID.fromString(id)
         return proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8081, "/api/v1/user/get/$id")
     }
 
@@ -52,7 +58,7 @@ class UsersRestApiProxy {
         ApiResponse(code = 409, message = "User already exists", response = ErrorData::class)
     ])
     fun registerUser(@ApiParam(value = "New user object", required = true)
-                     @RequestBody body: RegistrationData, request: HttpServletRequest): ResponseEntity<String> {
+                     @RequestBody @Valid body: RegistrationData, request: HttpServletRequest): ResponseEntity<String> {
         val string = jacksonObjectMapper().writeValueAsString(body)
         return proxyService.proxy(string, HttpMethod.POST, request, "localhost", 8081, "/api/v1/user/register")
     }
@@ -65,7 +71,8 @@ class UsersRestApiProxy {
         ApiResponse(code = 409, message = "User already exists", response = ErrorData::class)
     ])
     fun editUser(@ApiParam(value = "Updated user object", required = true)
-                 @RequestBody body: UserData, request: HttpServletRequest): ResponseEntity<String> {
+                 @RequestBody @Valid body: UserData, request: HttpServletRequest): ResponseEntity<String> {
+        UUID.fromString(body.id)
         val string = jacksonObjectMapper().writeValueAsString(body)
         return proxyService.proxy(string, HttpMethod.POST, request, "localhost", 8081, "/api/v1/user/edit")
     }

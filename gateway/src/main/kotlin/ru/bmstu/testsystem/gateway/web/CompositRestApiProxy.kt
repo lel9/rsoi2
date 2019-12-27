@@ -1,29 +1,39 @@
 package ru.bmstu.testsystem.gateway.web
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.swagger.annotations.*
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpMethod
 import org.springframework.beans.propertyeditors.CustomDateEditor
+import org.springframework.data.domain.Page
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.WebDataBinder
 import org.springframework.web.bind.annotation.*
-import org.springframework.http.ResponseEntity
+import org.springframework.web.client.ResourceAccessException
 import ru.bmstu.testsystem.gateway.model.*
 import ru.bmstu.testsystem.gateway.web.util.ProxyService
-import ru.bmstu.testsystem.gateway.model.Result
-import java.util.*
-import javax.servlet.http.HttpServletRequest
+import ru.bmstu.testsystem.gateway.web.util.RestPageImpl
 import java.text.DateFormat
 import java.text.SimpleDateFormat
+import java.util.*
+import java.util.logging.Logger
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
+import javax.validation.constraints.NotEmpty
+import javax.validation.constraints.NotNull
+
 
 @RestController
 @RequestMapping("/api/v1/gateway")
 @Api(value = "Testing system")
 class CompositRestApiProxy {
+
+    var log: Logger = Logger.getLogger(CompositRestApiProxy::class.java.getName())
 
     @Autowired
     private lateinit var proxyService: ProxyService
@@ -50,21 +60,32 @@ class CompositRestApiProxy {
         request: HttpServletRequest
     ): ResponseEntity<String> {
         val entityRes = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8083, "/api/v1/result/get")
-        val results = jacksonObjectMapper().readValue<List<Result>>(entityRes.body!!)
-        val map: MutableMap<String, String> = mutableMapOf()
-        map.put("ignore_deleted_flag", "1")
-        val list = arrayListOf<ResultComposit>()
-        results.forEach { result ->
-            val entityUser = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8081, "/api/v1/user/get/${result.userId}")
-            if (entityUser.statusCode == HttpStatus.OK) {
-                val user = jacksonObjectMapper().readValue<UserData>(entityUser.body!!)
-                val entityExam =
-                    proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8082, "/api/v1/exam/get/${result.examId}", map)
-                if (entityExam.statusCode == HttpStatus.OK) {
-                    val exam = jacksonObjectMapper().readValue<ExamDataOut>(entityExam.body!!)
-                    list.add(ResultComposit(result, exam, user))
-                }
+
+        val results = jacksonObjectMapper().readValue<Page<Result>>(entityRes.body!!, object : TypeReference<RestPageImpl<Result>>() {})
+        val map: MutableMap<String, String> = mutableMapOf(Pair("ignore_deleted_flag", "1"))
+
+        val list = results.map { result ->
+            var user: UserData? = null
+            var exam: ExamDataOut? = null
+            var entityUser: ResponseEntity<String>? = null
+            var entityExam: ResponseEntity<String>? = null
+
+            try {
+                entityUser = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8081, "/api/v1/user/get/${result.userId}")
+            } catch (ex: ResourceAccessException) {
             }
+            if (entityUser != null && entityUser.statusCode == HttpStatus.OK) {
+                user = jacksonObjectMapper().readValue<UserData>(entityUser.body!!)
+            }
+
+            try {
+                entityExam = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8082, "/api/v1/exam/get/${result.examId}", map)
+            } catch (ex: ResourceAccessException) {
+            }
+            if (entityExam != null && entityExam.statusCode == HttpStatus.OK) {
+                exam = jacksonObjectMapper().readValue<ExamDataOut>(entityExam.body!!)
+            }
+            ResultComposit(result, exam, user)
         }
 
         val objectMapper = ObjectMapper();
@@ -83,9 +104,21 @@ class CompositRestApiProxy {
         ApiResponse(code = 404, message = "User not found", response = ErrorData::class),
         ApiResponse(code = 400, message = "Bad request", response = ErrorData::class)
     ])
-    fun deleteUser(@PathVariable id: String, request: HttpServletRequest) {
-        proxyService.proxy(null, HttpMethod.DELETE, request,"localhost", 8081,  "/api/v1/user/delete/$id")
-        proxyService.proxy(null, HttpMethod.DELETE, request,"localhost", 8083,  "/api/v1/result/delete/$id")
+    fun deleteUser(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<String> {
+        UUID.fromString(id)
+        try {
+            proxyService.proxy(null, HttpMethod.DELETE, request, "localhost", 8081, "/api/v1/user/delete/$id")
+        } catch (ex: ResourceAccessException) {
+            val req = RequestIn("DELETE", "localhost", 8081, "/api/v1/user/delete/$id")
+            proxyService.proxy(jacksonObjectMapper().writeValueAsString(req), HttpMethod.POST, "localhost", 8084, "/api/v1/redis/request/add")
+        }
+        try {
+            proxyService.proxy(null, HttpMethod.DELETE, request,"localhost", 8083,  "/api/v1/result/delete/$id")
+        } catch (ex: ResourceAccessException) {
+            val req = RequestIn("DELETE", "localhost", 8083, "/api/v1/result/delete/$id")
+            proxyService.proxy(jacksonObjectMapper().writeValueAsString(req), HttpMethod.POST, "localhost", 8084, "/api/v1/redis/request/add")
+        }
+        return ResponseEntity.noContent().build()
     }
 
     @PostMapping("/result/add")
@@ -100,15 +133,48 @@ class CompositRestApiProxy {
                   @ApiParam(value = "User id", required = true)
                   @RequestParam userId: String,
                   @ApiParam(value = "Answers", required = true)
-                  @RequestBody body: List<UserAnswer>, request: HttpServletRequest
+                  @RequestBody @Valid
+                  @NotNull(message="Список ответов должен быть задан")
+                  @NotEmpty(message="Список ответов не может быть пуст") body: List<UserAnswer>, request: HttpServletRequest
     ): ResponseEntity<String> {
-        proxyService.proxy(null, HttpMethod.POST, request, "localhost", 8082, "/api/v1/exam/inc/$examId")
+        UUID.fromString(examId)
+        UUID.fromString(userId)
+
+        val res = proxyService.proxy(null, HttpMethod.POST, request, "localhost", 8082, "/api/v1/exam/inc/$examId")
+        if (res.statusCode != HttpStatus.OK)
+            return res
 
         val examEntity = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8082, "/api/v1/exam/get/full/$examId")
-        if (examEntity.statusCode != HttpStatus.OK)
+        if (examEntity.statusCode != HttpStatus.OK) {
+            rollbackIncPasses(request, examId)
             return examEntity
+        }
+
         val exam = jacksonObjectMapper().readValue<ExamDataWithAnsOut>(examEntity.body!!)
         val ua = UserAnswers(exam.questionIns, body)
-        return proxyService.proxy(jacksonObjectMapper().writeValueAsString(ua), HttpMethod.POST, request, "localhost", 8083, "/api/v1/result/add")
+        var resadd: ResponseEntity<String>? = null
+
+        try {
+            resadd = proxyService.proxy(jacksonObjectMapper().writeValueAsString(ua), HttpMethod.POST, request, "localhost", 8083, "/api/v1/result/add")
+        } catch (ex: ResourceAccessException) {
+            rollbackIncPasses(request, examId)
+            throw ex
+        }
+
+        if (resadd.statusCode != HttpStatus.CREATED)
+            rollbackIncPasses(request, examId)
+        return resadd
+
+    }
+
+    fun rollbackIncPasses(request: HttpServletRequest, examId: String) {
+        try {
+            val res = proxyService.proxy(null, HttpMethod.POST, request, "localhost", 8082, "/api/v1/exam/dec/$examId")
+            log.info("Откат операции...")
+            if (res.statusCode != HttpStatus.OK)
+                log.warning("Откат операции неуспешен: " + res.body)
+        } catch (ex: ResourceAccessException) {
+            log.warning("Откат операции неуспешен: " + ex.message)
+        }
     }
 }

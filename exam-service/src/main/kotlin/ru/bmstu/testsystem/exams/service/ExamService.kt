@@ -1,5 +1,6 @@
 package ru.bmstu.testsystem.exams.service
 
+import org.springframework.data.domain.Page
 import ru.bmstu.testsystem.exams.model.ExamDataIn
 import ru.bmstu.testsystem.exams.model.ExamDataOut
 import ru.bmstu.testsystem.exams.model.ExamDataWithAnsOut
@@ -15,7 +16,9 @@ interface ExamService {
 
     fun incPasses(id: UUID): ExamDataOut
 
-    fun getAllExams(page: Int, limit: Int): List<ExamDataOut>
+    fun decPasses(id: UUID): ExamDataOut
+
+    fun getAllExams(page: Int, limit: Int): Page<ExamDataOut>
 
     fun findByIdAdmin(id: UUID): ExamDataWithAnsOut
 

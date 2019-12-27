@@ -1,9 +1,10 @@
-package ru.bmstu.testsystem.result.service
+﻿package ru.bmstu.testsystem.result.service
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.Page
 import ru.bmstu.testsystem.result.domain.ExamResult
 import ru.bmstu.testsystem.result.domain.QuestionType
 import ru.bmstu.testsystem.result.model.UserAnswers
@@ -22,24 +23,14 @@ class ExamResultServiceImpl : ExamResultService {
         examResultRepository.deleteByUserId(userId)
     }
 
-    override fun getAllResults(page: Int, limit: Int): List<Result> {
+    override fun getAllResults(page: Int, limit: Int): Page<Result> {
         val pageableRequest = PageRequest.of(page, limit, Sort.by(Sort.Direction.ASC, "passedAt"))
-        val exams = examResultRepository.findAll(pageableRequest)
+        val results = examResultRepository.findAll(pageableRequest)
 
-        val list = ArrayList<Result>()
-        exams.forEach { res ->
-            list.add(
-                Result(res)
-            )
-        }
-        return list
+        return results.map { res -> Result(res) }
     }
 
     override fun passTest(examId: UUID, userId: UUID, userAnswers: UserAnswers): Result {
-        if (userAnswers.list == null || userAnswers.list!!.isEmpty())
-            throw IllegalArgumentException("Список ответов не задан")
-        if (userAnswers.questions == null || userAnswers.questions!!.isEmpty())
-            throw IllegalArgumentException("Список вопросов не задан")
 
         val resultString = userAnswers.list?.map { mua ->
             mua?.let { ua ->
@@ -47,11 +38,11 @@ class ExamResultServiceImpl : ExamResultService {
                 mq?.let { q ->
                     if (q.type == QuestionType.NO_ANSWER) {
                         if (ua.checkedVariants != null)
-                            throw IllegalArgumentException("Не заданы варианты ответа")
+                            throw IllegalArgumentException("checkedVariants не должны быть заданы: тип вопроса " + q.type.toString())
                         return@map q.correctInputAnswer?.toLowerCase() == ua.inputAnswer?.toLowerCase()
                     }
                     if (ua.inputAnswer != null)
-                        throw IllegalArgumentException("Не задан ответ")
+                        throw IllegalArgumentException("inputAnswer не должен быть задан: тип вопроса " + q.type.toString())
                     return@map q.correctVariants?.toSet() == ua.checkedVariants?.toSet()
                 }
             }

@@ -4,13 +4,13 @@ import java.sql.Date
 import java.util.*
 
 data class Result (
-    val id: UUID,
+    val id: String,
 
     val result: String,
 
     val passedAt: Date,
 
-    var examId: UUID,
+    var examId: String,
 
-    var userId: UUID
+    var userId: String
 )

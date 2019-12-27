@@ -35,13 +35,11 @@ dependencies {
     implementation('com.fasterxml.jackson.module:jackson-module-kotlin')
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    compile group: 'org.hibernate', name: 'hibernate-validator', version: '6.0.15.Final'
     //runtimeOnly('org.springframework.boot:spring-boot-devtools')
     runtimeOnly('org.postgresql:postgresql')
     testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
     testImplementation('org.springframework.boot:spring-boot-starter-test')
-    testImplementation('org.springframework.security:spring-security-test')
-    testCompile("org.springframework.boot:spring-boot-starter-test")
-
 }
 
 sourceCompatibility = 1.8

@@ -5,6 +5,7 @@ import org.springframework.beans.propertyeditors.CustomDateEditor
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.WebDataBinder
 import org.springframework.web.bind.annotation.*
+import org.springframework.data.domain.Page
 import ru.bmstu.testsystem.result.model.Result
 import ru.bmstu.testsystem.result.model.UserAnswers
 import ru.bmstu.testsystem.result.service.ExamResultServiceImpl
@@ -28,7 +29,7 @@ class RestApiImpl {
     @GetMapping("/get")
     @ResponseStatus(HttpStatus.OK)
     fun getAll(@RequestParam(value = "page", defaultValue = "0", required = false) page: Int,
-               @RequestParam(value = "limit", defaultValue = "12", required = false) limit: Int) : List<Result> {
+               @RequestParam(value = "limit", defaultValue = "12", required = false) limit: Int) : Page<Result> {
         return resultService.getAllResults(page, limit)
     }
 

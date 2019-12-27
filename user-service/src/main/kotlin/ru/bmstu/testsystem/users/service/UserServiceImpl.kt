@@ -6,11 +6,11 @@ import ru.bmstu.testsystem.users.exception.NoUserException
 import ru.bmstu.testsystem.users.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.data.domain.Page
 import ru.bmstu.testsystem.users.exception.UserAlreadyExistsException
 import ru.bmstu.testsystem.users.model.RegistrationData
 import ru.bmstu.testsystem.users.model.UserData
 import java.util.*
-import java.util.ArrayList
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 
@@ -28,17 +28,17 @@ class UserServiceImpl : UserService {
         return UserData(byId.get())
     }
 
-    override fun getAllUsers(page: Int, limit: Int): List<UserData> {
+    override fun getAllUsers(page: Int, limit: Int): Page<UserData> {
         val pageableRequest = PageRequest.of(page, limit, Sort.by(Sort.Direction.ASC, "username"))
         val users = userRepository.findAll(pageableRequest)
 
-        val list = ArrayList<UserData>()
-        users.forEach { user ->
-            list.add(
-                UserData(user)
-            )
-        }
-        return list
+        //val list = ArrayList<UserData>()
+        //users.forEach { user ->
+        //    list.add(
+        //        UserData(user)
+        //    )
+        //}
+        return users.map { user -> UserData(user) }
     }
 
     override fun registerUser(registrationData: RegistrationData): UserData {
@@ -46,12 +46,12 @@ class UserServiceImpl : UserService {
                 registrationData.username == "")
             throw IllegalArgumentException("Email or username is empty")
 
-        val user = userRepository.findByUsername(registrationData.username)
+        val user = userRepository.findByUsername(registrationData.username!!)
         if (user != null) {
             throw UserAlreadyExistsException()
         }
 
-        val newUser = User(registrationData.username, registrationData.email)
+        val newUser = User(registrationData.username!!, registrationData.email!!)
         val saved = userRepository.save(newUser)
         return UserData(saved)
     }
@@ -67,14 +67,14 @@ class UserServiceImpl : UserService {
             throw IllegalArgumentException("Email or username is empty")
 
         if (user.username != newUserData.username) {
-            val exists = userRepository.findByUsername(newUserData.username)
+            val exists = userRepository.findByUsername(newUserData.username!!)
             if (exists != null)
                 throw UserAlreadyExistsException()
-            user.username = newUserData.username
+            user.username = newUserData.username!!
         }
 
         if (user.email != newUserData.email)
-            user.email = newUserData.email
+            user.email = newUserData.email!!
 
         val newPerson = Person(newUserData.firstName, newUserData.lastName, newUserData.birthday)
         val oldPerson = user.person

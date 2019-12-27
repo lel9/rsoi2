@@ -7,12 +7,14 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.ResourceAccessException
 import ru.bmstu.testsystem.gateway.model.ErrorData
 import ru.bmstu.testsystem.gateway.model.ExamDataIn
 import ru.bmstu.testsystem.gateway.model.ExamDataOut
 import ru.bmstu.testsystem.gateway.web.util.ProxyService
 import java.util.*
 import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 
 
 @RestController
@@ -44,7 +46,8 @@ class ExamsRestApiProxy {
         ApiResponse(code = 404, message = "Exam not found", response = ErrorData::class),
         ApiResponse(code = 400, message = "Bad request", response = ErrorData::class)
     ])
-    fun getExamById(@PathVariable id: UUID, request: HttpServletRequest): ResponseEntity<String> {
+    fun getExamById(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<String> {
+        UUID.fromString(id)
         return proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8082, "/api/v1/exam/get/$id")
     }
 
@@ -55,21 +58,21 @@ class ExamsRestApiProxy {
         ApiResponse(code = 400, message = "Bad request", response = ErrorData::class)
     ])
     fun addExam(@ApiParam(value = "New exam object", required = true)
-                     @RequestBody body: ExamDataIn, request: HttpServletRequest
+                     @RequestBody @Valid body: ExamDataIn, request: HttpServletRequest
     ): ResponseEntity<String> {
         val string = jacksonObjectMapper().writeValueAsString(body)
         return proxyService.proxy(string, HttpMethod.POST, request, "localhost", 8082, "/api/v1/exam/add")
     }
 
     @DeleteMapping("/exam/delete/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "Delete exam")
     @ApiResponses(value = [
         ApiResponse(code = 204, message = "Successfully deleted exam"),
         ApiResponse(code = 404, message = "Exam not found", response = ErrorData::class),
         ApiResponse(code = 400, message = "Bad request", response = ErrorData::class)
     ])
-    fun deleteExam(@PathVariable id: UUID, request: HttpServletRequest) {
-        proxyService.proxy(null, HttpMethod.DELETE, request,"localhost", 8082,  "/api/v1/exam/remove/$id")
+    fun deleteExam(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<String> {
+        UUID.fromString(id)
+        return proxyService.proxy(null, HttpMethod.DELETE, request,"localhost", 8082,  "/api/v1/exam/remove/$id")
     }
 }

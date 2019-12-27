@@ -1,11 +1,11 @@
-package ru.bmstu.testsystem.exams.service
+﻿package ru.bmstu.testsystem.exams.service
 
-import ru.bmstu.testsystem.exams.exception.DeletedExamException
 import ru.bmstu.testsystem.exams.exception.NoExamException
 import ru.bmstu.testsystem.exams.repository.ExamRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import ru.bmstu.testsystem.exams.model.ExamDataIn
 import ru.bmstu.testsystem.exams.model.ExamDataOut
@@ -23,7 +23,7 @@ class ExamServiceImpl : ExamService {
         val exam = examRepository.findById(id)
         if (!exam.isPresent) throw NoExamException()
         val examGet = exam.get()
-        if (examGet.isDeleted && flag == 1) throw DeletedExamException()
+        if (examGet.isDeleted && flag != 1) throw NoExamException()
         return ExamDataOut(examGet)
     }
 
@@ -31,34 +31,27 @@ class ExamServiceImpl : ExamService {
         val exam = examRepository.findById(id)
         if (!exam.isPresent) throw NoExamException()
         val examGet = exam.get()
-        if (examGet.isDeleted) throw DeletedExamException()
+        if (examGet.isDeleted) throw NoExamException()
         return ExamDataWithAnsOut(examGet)
     }
 
     override fun addExam(exam: ExamDataIn) : ExamDataOut {
-        if (exam.questionIns.isEmpty())
-            throw IllegalArgumentException("Не задан список вопросов")
         return ExamDataOut(examRepository.save(exam.toExam()))
     }
 
-    override fun getAllExams(page: Int, limit: Int): List<ExamDataOut> {
+    override fun getAllExams(page: Int, limit: Int): Page<ExamDataOut> {
         val pageableRequest = PageRequest.of(page, limit, Sort.by(Sort.Direction.ASC, "name"))
-        val exams = examRepository.findAll(pageableRequest)
+        val exams = examRepository.findByIsDeleted(false, pageableRequest)
 
-        val list = ArrayList<ExamDataOut>()
-        exams.forEach { user ->
-            list.add(
-                ExamDataOut(user)
-            )
-        }
-        return list
+        val examsDTO = exams.map { exam -> ExamDataOut(exam) }
+        return examsDTO
     }
 
     override fun removeExam(id: UUID) {
         if (!examRepository.findById(id).isPresent)
             throw NoExamException()
         if (examRepository.findById(id).get().isDeleted)
-            throw DeletedExamException()
+            throw NoExamException()
         examRepository.setDeletedById(id)
     }
 
@@ -66,8 +59,18 @@ class ExamServiceImpl : ExamService {
         val byId = examRepository.findById(id)
         if (!byId.isPresent) throw NoExamException()
         var exam = byId.get()
-        if (exam.isDeleted) throw DeletedExamException()
+        if (exam.isDeleted) throw NoExamException()
         exam.passCount += 1
+        val save = examRepository.save(exam)
+        return ExamDataOut(save)
+    }
+
+    override fun decPasses(id: UUID): ExamDataOut {
+        val byId = examRepository.findById(id)
+        if (!byId.isPresent) throw NoExamException()
+        var exam = byId.get()
+        if (exam.isDeleted) throw NoExamException()
+        exam.passCount -= 1
         val save = examRepository.save(exam)
         return ExamDataOut(save)
     }
