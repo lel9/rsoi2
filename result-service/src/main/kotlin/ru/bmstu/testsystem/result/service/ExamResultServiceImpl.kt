@@ -31,7 +31,6 @@ class ExamResultServiceImpl : ExamResultService {
     }
 
     override fun passTest(examId: UUID, userId: UUID, userAnswers: UserAnswers): Result {
-
         val resultString = userAnswers.list?.map { mua ->
             mua?.let { ua ->
                 val mq = userAnswers.questions?.find { q -> q?.id == ua.questionId  }

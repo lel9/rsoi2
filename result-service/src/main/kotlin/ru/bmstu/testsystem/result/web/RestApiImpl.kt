@@ -11,6 +11,7 @@ import ru.bmstu.testsystem.result.model.UserAnswers
 import ru.bmstu.testsystem.result.service.ExamResultServiceImpl
 import java.text.DateFormat
 import java.util.*
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("/api/v1/result")
@@ -37,7 +38,7 @@ class RestApiImpl {
     @ResponseStatus(HttpStatus.CREATED)
     fun postRes(@RequestParam(value = "examId", required = true) examId: String,
                      @RequestParam(value = "userId", required = true) userId: String,
-                     @RequestBody userAnswers: UserAnswers): Result {
+                     @RequestBody @Valid userAnswers: UserAnswers): Result {
         val testResult = resultService.passTest(
             examId = UUID.fromString(examId),
             userId = UUID.fromString(userId),
