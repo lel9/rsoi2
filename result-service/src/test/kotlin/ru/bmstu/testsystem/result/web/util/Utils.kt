@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.util.MultiValueMap
@@ -21,7 +20,6 @@ object Utils {
     fun makePostRequest(route: String, body: Any): MockHttpServletRequestBuilder {
         return MockMvcRequestBuilders
             .post(route)
-            .with(SecurityMockMvcRequestPostProcessors.csrf().asHeader())
             .contentType(APPLICATION_JSON_UTF8)
             .content(makeRequestBody(body))
     }
@@ -29,13 +27,11 @@ object Utils {
     fun makeGetRequest(route: String): MockHttpServletRequestBuilder {
         return MockMvcRequestBuilders
             .get(route)
-            .with(SecurityMockMvcRequestPostProcessors.csrf().asHeader())
     }
 
     fun makeDeleteRequest(route: String): MockHttpServletRequestBuilder {
         return MockMvcRequestBuilders
             .delete(route)
-            .with(SecurityMockMvcRequestPostProcessors.csrf().asHeader())
     }
 
     fun makeMultipartRequest(
@@ -47,7 +43,6 @@ object Utils {
             .multipart(route)
             .file(multipartFile)
             .params(params)
-            .with(SecurityMockMvcRequestPostProcessors.csrf().asHeader())
             .contentType("multipart/form-data")
     }
 
