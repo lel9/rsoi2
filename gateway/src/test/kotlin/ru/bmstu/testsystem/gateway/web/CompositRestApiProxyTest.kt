@@ -25,6 +25,7 @@ import org.springframework.web.context.WebApplicationContext
 import ru.bmstu.testsystem.gateway.TestingSystemApplication
 import ru.bmstu.testsystem.gateway.model.UserAnswer
 import ru.bmstu.testsystem.gateway.web.util.Utils
+import java.net.URI
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [TestingSystemApplication::class])
@@ -128,7 +129,7 @@ class CompositRestApiProxyTest {
                 .requestTo("http://localhost:8083/api/v1/result/add" +
                         "?examId=446ae2f3-eb60-44cb-b889-22f14ef06d82&userId=12412cdb-398f-4def-9cec-325b11968b56"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withSuccess())
+            .andRespond(MockRestResponseCreators.withCreatedEntity(URI("")))
 
         this.mvc.perform(Utils
             .makePostRequest("/api/v1/gateway/result/add" +

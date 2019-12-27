@@ -59,8 +59,7 @@ class ExamsRestApiProxyTest {
 
     private val examToAdd = ExamDataIn("ename", "desc", arrayListOf())
 
-    private val newExam = "{\"id\":\"12412cdb-398f-4def-9cec-325b11968b56\", " +
-            "\"name\":\"ename\",\"description\":\"desc\", \"passes\": 0, \"questionIns\": []}"
+    private val newExam = "{\"message\":\"Список вопросов не может быть пуст\",\"type\":\"InvalidexamDataIn\"}"
 
     @Before
     fun setup() {
@@ -106,7 +105,7 @@ class ExamsRestApiProxyTest {
         this.mvc.perform(Utils.makePostRequest("/api/v1/gateway/exam/add", examToAdd))
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.content().string(newExam))
-            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.status().is4xxClientError)
     }
 
     @Test
