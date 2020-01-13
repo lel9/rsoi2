@@ -14,9 +14,9 @@ buildscript {
     }
 }
 
-apply plugin: 'jacoco'
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
+apply plugin: 'kotlin-jpa'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
@@ -30,20 +30,23 @@ repositories {
 
 dependencies {
     implementation('org.springframework.boot:spring-boot-starter-data-jpa')
+    implementation('org.springframework.boot:spring-boot-starter-thymeleaf')
     implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.springframework.boot:spring-boot-starter-security')
+    implementation('org.springframework.security.oauth:spring-security-oauth2:2.4.0.RELEASE')
     implementation('com.fasterxml.jackson.module:jackson-module-kotlin')
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation 'org.springframework.data:spring-data-redis'
-    implementation 'redis.clients:jedis'
+    implementation('org.webjars:bootstrap:4.0.0')
+    compile group: 'org.hibernate', name: 'hibernate-validator', version: '6.0.15.Final'
     //runtimeOnly('org.springframework.boot:spring-boot-devtools')
+    runtimeOnly('org.postgresql:postgresql')
     //testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
-    testImplementation('org.springframework.boot:spring-boot-starter-test')
-    testCompile("org.springframework.boot:spring-boot-starter-test")
+    //testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 
 bootJar {
-    baseName = 'gateway'
+    baseName = 'session-service'
     version =  '1.0'
 }
 
@@ -60,7 +63,6 @@ compileTestKotlin {
         jvmTarget = "1.8"
     }
 }
-
 
 task unpack(type: Copy) {
     dependsOn bootJar

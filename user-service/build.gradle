@@ -36,7 +36,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     compile group: 'org.hibernate', name: 'hibernate-validator', version: '6.0.15.Final'
-    //runtimeOnly('org.springframework.boot:spring-boot-devtools')
     runtimeOnly('org.postgresql:postgresql')
     testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
     testImplementation('org.springframework.boot:spring-boot-starter-test')
@@ -59,4 +58,10 @@ compileTestKotlin {
         freeCompilerArgs = ["-Xjsr305=strict"]
         jvmTarget = "1.8"
     }
+}
+
+task unpack(type: Copy) {
+    dependsOn bootJar
+    from(zipTree(tasks.bootJar.outputs.files.singleFile))
+    into("build/dependency")
 }

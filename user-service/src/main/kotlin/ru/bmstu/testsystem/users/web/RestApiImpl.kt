@@ -2,15 +2,15 @@ package ru.bmstu.testsystem.users.web
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.propertyeditors.CustomDateEditor
+import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.WebDataBinder
 import org.springframework.web.bind.annotation.*
-import org.springframework.data.domain.Page
 import ru.bmstu.testsystem.users.model.RegistrationData
 import ru.bmstu.testsystem.users.model.UserData
 import ru.bmstu.testsystem.users.service.UserServiceImpl
-import java.util.*
 import java.text.DateFormat
+import java.util.*
 import javax.validation.Valid
 
 @RestController
@@ -18,7 +18,7 @@ import javax.validation.Valid
 class RestApiImpl {
 
     @Autowired
-    private lateinit var userService: UserServiceImpl 
+    private lateinit var userService: UserServiceImpl
     
     @InitBinder
     fun initBinder(binder: WebDataBinder) {
@@ -60,6 +60,5 @@ class RestApiImpl {
     fun deleteUser(@PathVariable id: String) {
         userService.deleteUser(UUID.fromString(id))
     }
-
 
 }
