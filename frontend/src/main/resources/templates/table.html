@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title th:text="${title}"></title>
+
+    <link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+            aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/sign_up'}">Создать пользователя</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/create_exam'}">Создать тест</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/all_exams'}">Тесты</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/all_users'}">Пользователи</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/all_results'}">Результаты</a>
+            </li>
+
+        </ul>
+    </div>
+</nav>
+
+
+<div class="container">
+    <div class="row">
+        <main class="col-md-9 col-lg-9 col-xl-10">
+            <h2 class="display-6 mt-3 mb-4" th:text="${title}"></h2>
+        <table class="table">
+            <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th:block th:each="header : ${table.headers}">
+                    <th scope="col" th:text="${header}"></th>
+                </th:block>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="row, i : ${table.rows}">
+                <th scope="row" th:text="${i.count}"></th>
+                <th:block th:each="cell : ${row.cells}">
+                    <td th:if="${cell.link} != ''">
+                        <a th:href="@{${cell.link}}" th:text="${cell.data}"></a>
+                    </td>
+                    <td th:if="${cell.link} == ''" th:text="${cell.data}"></td>
+                </th:block>
+            </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${table.totalPages > 0}" class="pagination"
+             th:each="pageNumber : ${table.pageNumbers}">
+        <a th:href="@{${table.endpoint}(page=${pageNumber-1}, limit=${table.size})}"
+           th:text=${pageNumber}
+           th:class="${pageNumber==table.number+1} ? active"></a>
+        
+        </main>
+
+        <nav class="col-md-3 col-lg-3 col-xl-2 sidebar" th:if="${sidebar} != null">
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item" th:each="item, k: ${sidebar.items}">
+                    <a class="nav-link" th:classappend="${sidebar.activeItem} == __${k.index}__ ? active : ''"
+                       th:href="@{${item.link}}">[[${item.text}]]</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script th:src="@{/bootstrap/js/bootstrap.min.js}"></script>
+
+</body>
+</html>

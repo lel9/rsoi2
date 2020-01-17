@@ -16,8 +16,8 @@ import javax.crypto.spec.SecretKeySpec
 @RestController
 class TokenController {
 
-    @Value("\${server.address}")
-    private lateinit var host: String
+    //@Value("\${server.address}")
+    private var host: String = "user-service"
 
     @Value("\${server.port}")
     private var port: Int? = null

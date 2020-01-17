@@ -3,6 +3,7 @@ package ru.bmstu.testsystem.gateway.web
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.swagger.annotations.*
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -25,6 +26,12 @@ class ExamsRestApiProxy {
     @Autowired
     private lateinit var proxyService: ProxyService
 
+    @Value("\${services.exam.host}")
+    private lateinit var exam_host: String
+
+    @Value("\${services.exam.port}")
+    private var exam_port: Int? = null
+
     @GetMapping("/exam/get")
     @ApiOperation(value = "Get all exams", response = List::class)
     @ApiResponses(value = [
@@ -36,7 +43,7 @@ class ExamsRestApiProxy {
                  @RequestParam(value = "limit", required = false, defaultValue = "12") limit: Int,
                  request: HttpServletRequest
     ): ResponseEntity<String> {
-        return proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8082, "/api/v1/exam/get")
+        return proxyService.proxy(null, HttpMethod.GET, request, exam_host, exam_port!!, "/api/v1/exam/get")
     }
 
     @GetMapping("/exam/get/{id}")
@@ -48,7 +55,7 @@ class ExamsRestApiProxy {
     ])
     fun getExamById(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<String> {
         UUID.fromString(id)
-        return proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8082, "/api/v1/exam/get/$id")
+        return proxyService.proxy(null, HttpMethod.GET, request, exam_host, exam_port!!, "/api/v1/exam/get/$id")
     }
 
     @PostMapping("/exam/add")
@@ -61,7 +68,7 @@ class ExamsRestApiProxy {
                      @RequestBody @Valid body: ExamDataIn, request: HttpServletRequest
     ): ResponseEntity<String> {
         val string = jacksonObjectMapper().writeValueAsString(body)
-        return proxyService.proxy(string, HttpMethod.POST, request, "localhost", 8082, "/api/v1/exam/add")
+        return proxyService.proxy(string, HttpMethod.POST, request, exam_host, exam_port!!, "/api/v1/exam/add")
     }
 
     @DeleteMapping("/exam/delete/{id}")
@@ -73,6 +80,6 @@ class ExamsRestApiProxy {
     ])
     fun deleteExam(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<String> {
         UUID.fromString(id)
-        return proxyService.proxy(null, HttpMethod.DELETE, request,"localhost", 8082,  "/api/v1/exam/remove/$id")
+        return proxyService.proxy(null, HttpMethod.DELETE, request,exam_host, exam_port!!,  "/api/v1/exam/remove/$id")
     }
 }

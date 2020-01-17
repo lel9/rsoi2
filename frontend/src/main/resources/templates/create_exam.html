@@ -1,0 +1,137 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Новый тест</title>
+
+    <link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link th:href="@{/css/create_exam.css}" rel="stylesheet">
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+            aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/sign_up'}">Создать пользователя</a>
+            </li>
+
+            <li class="nav-item active">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'#'}">Создать тест</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/all_exams'}">Тесты</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/all_users'}">Пользователи</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" aria-haspopup="true" aria-expanded="false" th:href="@{'/all_results'}">Результаты</a>
+            </li>
+
+        </ul>
+    </div>
+</nav>
+
+
+<div class="container">
+    <h2 class="display-6 mt-3 mb-4">Новый тест</h2>
+</div>
+
+
+<div class="container">
+
+    <div class="row">
+
+        <div class="col col-lg-offset-4 well">
+            <form th:object="${exam}" th:action="@{/create_exam}" method="post" onsubmit="return validateAndPrepare()">
+                <input type="text" class="form-control mb-3" id="testName" placeholder="Название теста"
+                       th:field="*{name}" maxlength="50" required>
+                <textarea class="form-control mb-3"
+                          id="text" placeholder="Описание теста" th:field="*{description}" rows="5" maxlength="400"
+                          required>
+                </textarea>
+                <div id="questionList">
+                    <div class="card mb-4 question" id="question0">
+                        <div class="card-body">
+                            <div class="container">
+                                <div class="row">
+
+                                    <div class="col-9">
+                                        <input type="text" class="form-control questionText"
+                                               placeholder="Текст вопроса" required>
+                                    </div>
+
+                                    <div class="col-3">
+                                        <select class="form-control" onchange="onSelectChange(0)">
+                                            <option value="SINGLE_ANSWER">Один ответ</option>
+                                            <option value="MULTIPLE_ANSWER">Несколько ответов</option>
+                                            <option value="NO_ANSWER">Без выбора ответа</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-10 add-answer-block inputAnswer">
+                                        <input type="text" class="form-control mt-3 answer-input"
+                                               placeholder="Вариант ответа">
+                                    </div>
+
+                                    <div class="col-2 add-answer-block add-button">
+                                        <button type="button" class="btn btn-outline-primary mt-3"
+                                                onclick="onAddAnswerClick(0)">Добавить
+                                        </button>
+                                    </div>
+
+                                    <div class="col-12 del-answer-block">
+                                        <button type="button" class="btn btn-outline-danger mt-3"
+                                                onclick="document.getElementById('question0').remove()">Удалить вопрос
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" id="addQuestion"
+                        onclick="onAddQuestionClick()"> Добавить вопрос
+                </button>
+
+                <hr>
+
+                <p>
+                    <button type="submit" class="btn btn-success mr-3" id="saveExam" onclick="prepareForm()">Отправить тест</button>
+                    <a th:href="@{/all_exams}" class="btn btn-secondary">Отмена</a>
+                </p>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script th:src="@{/js/create_exam.js}"></script>
+<script th:src="@{/js/create_exam_validate.js}"></script>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script th:src="@{/bootstrap/js/bootstrap.min.js}"></script>
+
+</body>
+</html>

@@ -24,11 +24,17 @@ import javax.annotation.PostConstruct
 @SpringBootApplication
 class TestingSystemApplication {
 
-    @Value("\${server.address}")
-    private val host: String? = null
+    //@Value("\${server.address}")
+    private val host: String = "result-service"
 
     @Value("\${server.port}")
     private val port: Int? = null
+
+    @Value("\${redis.host}")
+    private lateinit var redis_host: String
+
+    @Value("\${redis.port}")
+    private var redis_port: Int? = null
 
     @Autowired
     private lateinit var restTemplate: RestTemplate
@@ -50,7 +56,7 @@ class TestingSystemApplication {
 
     fun getRequests(page: Int) : Page<RequestOut>? {
         val thirdPartyApi =
-            URI("http", null, "localhost", 8084, "/api/v1/redis/request/get", "host=$host&port=$port&page=$page", null)
+            URI("http", null, redis_host, redis_port!!, "/api/v1/redis/request/get", "host=$host&port=$port&page=$page", null)
 
         val headers = HttpHeaders()
         headers.add("Accept", "application/json")
@@ -71,7 +77,7 @@ class TestingSystemApplication {
                     val thirdPartyApiRequest = URI("http", null, host, port!!, request.path, "", null)
                     restTemplate.exchange(thirdPartyApiRequest, HttpMethod.DELETE, null, String::class.java)
 
-                    val thirdPartyApiDelete = URI("http", null, "localhost", 8084, "/api/v1/redis/request/delete/${request.id}", "", null)
+                    val thirdPartyApiDelete = URI("http", null, redis_host, redis_port!!, "/api/v1/redis/request/delete/${request.id}", "", null)
                     restTemplate.exchange(thirdPartyApiDelete, HttpMethod.DELETE, null, String::class.java)
 
                 } catch (ex: Exception) {

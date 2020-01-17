@@ -12,8 +12,8 @@ import javax.crypto.Cipher
 @Configuration
 class WebConfig: WebMvcConfigurer {
 
-    @Value("\${server.address}")
-    private lateinit var host: String
+    //@Value("\${server.address}")
+    private var host: String = "exam-service"
 
     @Value("\${server.port}")
     private var port: Int? = null

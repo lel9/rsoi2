@@ -1,0 +1,33 @@
+server:
+  port: 3000
+  session:
+    cookie:
+      name: UISESSION
+spring:
+  thymeleaf:
+    cache: false
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    basic:
+      enabled: false
+    oauth2:
+      client:
+        client-id: SampleClientId
+        client-secret: secret
+        scope: user_info
+        redirect-uri-template: http://10.0.2.5:3000/login/oauth2/code/
+      provider:
+        token-uri: http://session-service:8085/auth/oauth/token
+        authorization-uri: http://10.0.2.5:8085/auth/oauth/authorize
+        check-token-uri: http://session-service:8085/auth/oauth/check_token
+        user-info-uri: http://session-service:8085/auth/user/me
+        revoke-access-token-uri: http://session-service:8085/auth/tokens/revoke
+        revoke-refresh-token-uri: http://session-service:8085/auth/tokens/revokeRefreshToken
+
+gateway:
+  host: gateway
+  port: 8080
+
+logging:
+  path: /tmp/app

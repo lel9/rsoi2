@@ -127,6 +127,9 @@ class ProxyService {
                 }
             }
             //val headers= e.responseHeaders
+            log.info(ebody)
+            log.info(ecode.toString())
+            e.printStackTrace()
             return ResponseEntity(ebody, ecode)
         }
     }

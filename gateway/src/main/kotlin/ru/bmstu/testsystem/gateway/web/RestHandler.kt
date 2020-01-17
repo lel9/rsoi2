@@ -48,6 +48,7 @@ class RestHandler : ResponseEntityExceptionHandler() {
     //500
     @ExceptionHandler(value = [(ResourceAccessException::class)])
     fun handleTimedOut(ex: ResourceAccessException, request: WebRequest): ResponseEntity<Any> {
+        ex.printStackTrace()
         val bodyOfResponse = GenericResponse(ex.message, "TimeOut")
         return handleExceptionInternal(ex, bodyOfResponse, HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request)
     }

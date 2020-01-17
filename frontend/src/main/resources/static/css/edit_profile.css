@@ -1,0 +1,13 @@
+.avatar {
+    vertical-align: middle;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin: auto;
+}
+
+.file-upload {
+    margin: 0 auto;
+    display: block;
+    text-align: center;
+}

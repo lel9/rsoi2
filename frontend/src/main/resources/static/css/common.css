@@ -1,0 +1,23 @@
+/* Move down content because we have a fixed navbar that is 3.5rem tall */
+body {
+  padding-top: 3.5rem;
+}
+
+.nav-item {
+    color: white;
+}
+
+.navbar {
+ background-color: #457C99;
+}
+
+.btn-link:hover,
+.btn-link {
+    text-decoration: none;
+    color: black;
+}
+
+.btn-link:active {
+    text-decoration: none;
+    color: white
+}

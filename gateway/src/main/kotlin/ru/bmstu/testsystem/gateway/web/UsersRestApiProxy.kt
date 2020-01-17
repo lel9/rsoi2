@@ -3,6 +3,7 @@ package ru.bmstu.testsystem.gateway.web
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.swagger.annotations.*
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.*
 import org.springframework.web.bind.annotation.*
 import ru.bmstu.testsystem.gateway.model.ErrorData
@@ -25,6 +26,12 @@ class UsersRestApiProxy {
     @Autowired
     private lateinit var breaker: CircuitBreaker
 
+    @Value("\${services.user.host}")
+    private lateinit var user_host: String
+
+    @Value("\${services.user.port}")
+    private var user_port: Int? = null
+
     @GetMapping("/user/get")
     @ApiOperation(value = "Get all users", response = List::class)
     @ApiResponses(value = [
@@ -35,7 +42,7 @@ class UsersRestApiProxy {
                  @ApiParam(value = "limit", required = false, defaultValue = "12")
                  @RequestParam(value = "limit", required = false, defaultValue = "12") limit: Int,
                  request: HttpServletRequest): ResponseEntity<String> {
-        return breaker.action(proxyService, null, HttpMethod.GET, request, "localhost", 8081, "/api/v1/user/get")
+        return breaker.action(proxyService, null, HttpMethod.GET, request, user_host, user_port!!, "/api/v1/user/get")
     }
 
     @GetMapping("/user/get/{id}")
@@ -47,7 +54,7 @@ class UsersRestApiProxy {
     ])
     fun getUserByName(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<String> {
         UUID.fromString(id)
-        return proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8081, "/api/v1/user/get/$id")
+        return proxyService.proxy(null, HttpMethod.GET, request, user_host, user_port!!, "/api/v1/user/get/$id")
     }
 
     @PostMapping("/user/register")
@@ -60,7 +67,7 @@ class UsersRestApiProxy {
     fun registerUser(@ApiParam(value = "New user object", required = true)
                      @RequestBody @Valid body: RegistrationData, request: HttpServletRequest): ResponseEntity<String> {
         val string = jacksonObjectMapper().writeValueAsString(body)
-        return proxyService.proxy(string, HttpMethod.POST, request, "localhost", 8081, "/api/v1/user/register")
+        return proxyService.proxy(string, HttpMethod.POST, request, user_host, user_port!!, "/api/v1/user/register")
     }
 
     @PostMapping("/user/edit")
@@ -74,6 +81,6 @@ class UsersRestApiProxy {
                  @RequestBody @Valid body: UserData, request: HttpServletRequest): ResponseEntity<String> {
         UUID.fromString(body.id)
         val string = jacksonObjectMapper().writeValueAsString(body)
-        return proxyService.proxy(string, HttpMethod.POST, request, "localhost", 8081, "/api/v1/user/edit")
+        return proxyService.proxy(string, HttpMethod.POST, request, user_host, user_port!!, "/api/v1/user/edit")
     }
 }

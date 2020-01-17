@@ -1,6 +1,7 @@
 package ru.bmstu.testsystem.sessions.server
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -27,6 +28,9 @@ class OAuth2AuthorizationServer : AuthorizationServerConfigurerAdapter() {
     @Autowired
     private val userDetailService: SimpleUserDetailService? = null
 
+    @Value("\${oauth2.client.redirect_uri}")
+    private lateinit var redirect_uri: String
+
     @Throws(Exception::class)
     override fun configure(endpoints: AuthorizationServerEndpointsConfigurer) {
         endpoints
@@ -51,7 +55,7 @@ class OAuth2AuthorizationServer : AuthorizationServerConfigurerAdapter() {
             .authorities("READ_ONLY_CLIENT")
             .scopes("user_info")
             .autoApprove(true)
-            .redirectUris("http://localhost:3000/login/oauth2/code/")
+            .redirectUris(redirect_uri)
             .accessTokenValiditySeconds(30)
             .refreshTokenValiditySeconds(604800)
     }

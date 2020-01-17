@@ -1,5 +1,6 @@
 package ru.bmstu.testsystem.redis.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory
@@ -7,6 +8,13 @@ import org.springframework.data.redis.core.RedisTemplate
 
 @Configuration
 class RedisConfig {
+
+    @Value("\${redis.host}")
+    private lateinit var host: String
+
+    @Value("\${redis.port}")
+    private var port: Int? = null
+
 
     @Bean
     fun redisTemplate(): RedisTemplate<String?, Any?>? {
@@ -18,8 +26,8 @@ class RedisConfig {
     @Bean
     fun jedisConnectionFactory(): JedisConnectionFactory {
         val jedisConFactory = JedisConnectionFactory()
-        jedisConFactory.hostName = "localhost"
-        jedisConFactory.port = 6379
+        jedisConFactory.hostName = host
+        jedisConFactory.port = port!!
         return jedisConFactory
     }
 }

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.swagger.annotations.*
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.propertyeditors.CustomDateEditor
 import org.springframework.data.domain.Page
 import org.springframework.http.HttpMethod
@@ -38,6 +39,30 @@ class CompositRestApiProxy {
     @Autowired
     private lateinit var proxyService: ProxyService
 
+    @Value("\${services.exam.host}")
+    private lateinit var exam_host: String
+
+    @Value("\${services.exam.port}")
+    private var exam_port: Int? = null
+
+    @Value("\${services.user.host}")
+    private lateinit var user_host: String
+
+    @Value("\${services.user.port}")
+    private var user_port: Int? = null
+
+    @Value("\${services.result.host}")
+    private lateinit var result_host: String
+
+    @Value("\${services.result.port}")
+    private var result_port: Int? = null
+
+    @Value("\${services.redis.host}")
+    private lateinit var redis_host: String
+
+    @Value("\${services.redis.port}")
+    private var redis_port: Int? = null
+
     @InitBinder
     fun initBinder(binder: WebDataBinder) {
         binder.registerCustomEditor(
@@ -59,7 +84,7 @@ class CompositRestApiProxy {
         @RequestParam(value = "limit", required = false, defaultValue = "12") limit: Int,
         request: HttpServletRequest
     ): ResponseEntity<String> {
-        val entityRes = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8083, "/api/v1/result/get")
+        val entityRes = proxyService.proxy(null, HttpMethod.GET, request, result_host, result_port!!, "/api/v1/result/get")
 
         val results = jacksonObjectMapper().readValue<Page<Result>>(entityRes.body!!, object : TypeReference<RestPageImpl<Result>>() {})
         val map: MutableMap<String, String> = mutableMapOf(Pair("ignore_deleted_flag", "1"))
@@ -71,7 +96,7 @@ class CompositRestApiProxy {
             var entityExam: ResponseEntity<String>? = null
 
             try {
-                entityUser = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8081, "/api/v1/user/get/${result.userId}")
+                entityUser = proxyService.proxy(null, HttpMethod.GET, request, user_host, user_port!!, "/api/v1/user/get/${result.userId}")
             } catch (ex: ResourceAccessException) {
             }
             if (entityUser != null && entityUser.statusCode == HttpStatus.OK) {
@@ -79,7 +104,7 @@ class CompositRestApiProxy {
             }
 
             try {
-                entityExam = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8082, "/api/v1/exam/get/${result.examId}", map)
+                entityExam = proxyService.proxy(null, HttpMethod.GET, request, exam_host, exam_port!!, "/api/v1/exam/get/${result.examId}", map)
             } catch (ex: ResourceAccessException) {
             }
             if (entityExam != null && entityExam.statusCode == HttpStatus.OK) {
@@ -107,16 +132,16 @@ class CompositRestApiProxy {
     fun deleteUser(@PathVariable id: String, request: HttpServletRequest): ResponseEntity<String> {
         UUID.fromString(id)
         try {
-            proxyService.proxy(null, HttpMethod.DELETE, request, "localhost", 8081, "/api/v1/user/delete/$id")
+            proxyService.proxy(null, HttpMethod.DELETE, request, user_host, user_port!!,  "/api/v1/user/delete/$id")
         } catch (ex: ResourceAccessException) {
-            val req = RequestIn("DELETE", "localhost", 8081, "/api/v1/user/delete/$id")
-            proxyService.proxy(jacksonObjectMapper().writeValueAsString(req), HttpMethod.POST, "localhost", 8084, "/api/v1/redis/request/add")
+            val req = RequestIn("DELETE", user_host, user_port!!,  "/api/v1/user/delete/$id")
+            proxyService.proxy(jacksonObjectMapper().writeValueAsString(req), HttpMethod.POST, redis_host, redis_port!!, "/api/v1/redis/request/add")
         }
         try {
-            proxyService.proxy(null, HttpMethod.DELETE, request,"localhost", 8083,  "/api/v1/result/delete/$id")
+            proxyService.proxy(null, HttpMethod.DELETE, request, result_host, result_port!!,  "/api/v1/result/delete/$id")
         } catch (ex: ResourceAccessException) {
-            val req = RequestIn("DELETE", "localhost", 8083, "/api/v1/result/delete/$id")
-            proxyService.proxy(jacksonObjectMapper().writeValueAsString(req), HttpMethod.POST, "localhost", 8084, "/api/v1/redis/request/add")
+            val req = RequestIn("DELETE", result_host, result_port!!, "/api/v1/result/delete/$id")
+            proxyService.proxy(jacksonObjectMapper().writeValueAsString(req), HttpMethod.POST, redis_host, redis_port!!, "/api/v1/redis/request/add")
         }
         return ResponseEntity.noContent().build()
     }
@@ -140,11 +165,11 @@ class CompositRestApiProxy {
         UUID.fromString(examId)
         UUID.fromString(userId)
 
-        val res = proxyService.proxy(null, HttpMethod.POST, request, "localhost", 8082, "/api/v1/exam/inc/$examId")
+        val res = proxyService.proxy(null, HttpMethod.POST, request, exam_host, exam_port!!, "/api/v1/exam/inc/$examId")
         if (res.statusCode != HttpStatus.OK)
             return res
 
-        val examEntity = proxyService.proxy(null, HttpMethod.GET, request, "localhost", 8082, "/api/v1/exam/get/full/$examId")
+        val examEntity = proxyService.proxy(null, HttpMethod.GET, request, exam_host, exam_port!!, "/api/v1/exam/get/full/$examId")
         if (examEntity.statusCode != HttpStatus.OK) {
             rollbackIncPasses(request, examId)
             return examEntity
@@ -155,7 +180,7 @@ class CompositRestApiProxy {
         var resadd: ResponseEntity<String>? = null
 
         try {
-            resadd = proxyService.proxy(jacksonObjectMapper().writeValueAsString(ua), HttpMethod.POST, request, "localhost", 8083, "/api/v1/result/add")
+            resadd = proxyService.proxy(jacksonObjectMapper().writeValueAsString(ua), HttpMethod.POST, request, result_host, result_port!!, "/api/v1/result/add")
         } catch (ex: ResourceAccessException) {
             rollbackIncPasses(request, examId)
             throw ex
@@ -169,7 +194,7 @@ class CompositRestApiProxy {
 
     fun rollbackIncPasses(request: HttpServletRequest, examId: String) {
         try {
-            val res = proxyService.proxy(null, HttpMethod.POST, request, "localhost", 8082, "/api/v1/exam/dec/$examId")
+            val res = proxyService.proxy(null, HttpMethod.POST, request, exam_host, exam_port!!, "/api/v1/exam/dec/$examId")
             log.info("Откат операции...")
             if (res.statusCode != HttpStatus.OK)
                 log.warning("Откат операции неуспешен: " + res.body)
