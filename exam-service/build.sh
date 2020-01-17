@@ -1,4 +1,4 @@
 #!/bin/bash
 
 #./gradlew build
-./gradlew unpack
+./"$1/gradlew" unpack
