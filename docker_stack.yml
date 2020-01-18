@@ -15,7 +15,7 @@ services:
   user-service:
     image: lel9/user-service:latest
     volumes:
-      - ~/docker/user_service/logs:/tmp/app
+      - ~/docker/user-service/logs:/tmp/app
     depends_on:
       - database
       - redis-service
@@ -25,7 +25,7 @@ services:
   exam-service:
     image: lel9/exam-service:latest
     volumes:
-      - ~/docker/exam_service/logs:/tmp/app
+      - ~/docker/exam-service/logs:/tmp/app
     depends_on:
       - database
       - redis_service
@@ -35,7 +35,7 @@ services:
   result-service:
     image: lel9/result-service:latest
     volumes:
-      - ~/docker/result_service/logs:/tmp/app
+      - ~/docker/result-service/logs:/tmp/app
     depends_on:
       - database
       - redis-service
@@ -45,7 +45,7 @@ services:
   redis-service:
     image: lel9/redis-service:latest
     volumes:
-      - ~/docker/redis_service/logs:/tmp/app
+      - ~/docker/redis-service/logs:/tmp/app
     depends_on:
       - queue
     networks:
@@ -56,7 +56,7 @@ services:
     ports:
       - "8085:8085"
     volumes:
-      - ~/docker/session_service/logs:/tmp/app
+      - ~/docker/session-service/logs:/tmp/app
     depends_on:
       - database
     networks:
