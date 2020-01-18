@@ -17,21 +17,24 @@ object Utils {
         MediaType(MediaType.APPLICATION_JSON.type, MediaType.APPLICATION_JSON.subtype, Charset.forName("utf8"))
 
     @Throws(JsonProcessingException::class)
-    fun makePostRequest(route: String, body: Any): MockHttpServletRequestBuilder {
+    fun makePostRequest(route: String, body: Any, token: String): MockHttpServletRequestBuilder {
         return MockMvcRequestBuilders
             .post(route)
+            .header("Authorization", token)
             .contentType(APPLICATION_JSON_UTF8)
             .content(makeRequestBody(body))
     }
 
-    fun makeGetRequest(route: String): MockHttpServletRequestBuilder {
+    fun makeGetRequest(route: String, token: String): MockHttpServletRequestBuilder {
         return MockMvcRequestBuilders
             .get(route)
+            .header("Authorization", token)
     }
 
-    fun makeDeleteRequest(route: String): MockHttpServletRequestBuilder {
+    fun makeDeleteRequest(route: String, token: String): MockHttpServletRequestBuilder {
         return MockMvcRequestBuilders
             .delete(route)
+            .header("Authorization", token)
     }
 
     fun makeMultipartRequest(

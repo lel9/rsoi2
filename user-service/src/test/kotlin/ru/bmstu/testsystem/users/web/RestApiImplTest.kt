@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.context.WebApplicationContext
 import ru.bmstu.testsystem.users.model.RegistrationData
 import ru.bmstu.testsystem.users.model.UserData
+import ru.bmstu.testsystem.users.model.AppCredential
 import ru.bmstu.testsystem.users.web.util.Utils
 import java.util.*
 
@@ -38,17 +39,24 @@ class RestApiImplTest {
 
     private lateinit var mvc: MockMvc
 
+    private var token: String = ""
+
     @Before
     fun setup() {
         mvc = MockMvcBuilders
             .webAppContextSetup(context)
             .build()
+
+        token = this.mvc.perform(
+            Utils.makePostRequest("/api/v1/token", AppCredential("userService", "vbwEAD63e0NPL1IbfzaXfg=="), token))
+                 .andReturn()
+                 .getResponse().contentAsString
     }
 
     @Test
     fun signUpGood() {
         this.mvc.perform(
-            Utils.makePostRequest("/api/v1/user/register", RegistrationData("uname", "email"))
+            Utils.makePostRequest("/api/v1/user/register", RegistrationData("uname", "email"), token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isCreated)
@@ -57,7 +65,7 @@ class RestApiImplTest {
     @Test
     fun signUpExist() {
         this.mvc.perform(
-            Utils.makePostRequest("/api/v1/user/register", RegistrationData("admin", "email"))
+            Utils.makePostRequest("/api/v1/user/register", RegistrationData("admin", "email"), token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isConflict)
@@ -66,7 +74,7 @@ class RestApiImplTest {
     @Test
     fun getUserGood() {
         this.mvc.perform(
-            Utils.makeGetRequest("/api/v1/user/get/12412cdb-398f-4def-9cec-325b11968b56")
+            Utils.makeGetRequest("/api/v1/user/get/12412cdb-398f-4def-9cec-325b11968b56", token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isOk)
@@ -75,7 +83,7 @@ class RestApiImplTest {
     @Test
     fun getUserBad() {
         this.mvc.perform(
-            Utils.makeGetRequest("/api/v1/user/get/12412cdb-398f-4def-9cec-325b11968b57")
+            Utils.makeGetRequest("/api/v1/user/get/12412cdb-398f-4def-9cec-325b11968b57", token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isNotFound)
@@ -84,7 +92,7 @@ class RestApiImplTest {
     @Test
     fun getUserBad2() {
         this.mvc.perform(
-            Utils.makeGetRequest("/api/v1/user/get/123")
+            Utils.makeGetRequest("/api/v1/user/get/123", token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isBadRequest)
@@ -93,7 +101,7 @@ class RestApiImplTest {
     @Test
     fun deleteUserGood() {
         this.mvc.perform(
-            Utils.makeDeleteRequest("/api/v1/user/delete/12412cdb-398f-4def-9cec-325b11968b56")
+            Utils.makeDeleteRequest("/api/v1/user/delete/12412cdb-398f-4def-9cec-325b11968b56", token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isNoContent)
@@ -102,7 +110,7 @@ class RestApiImplTest {
     @Test
     fun deleteUserBad() {
         this.mvc.perform(
-            Utils.makeDeleteRequest("/api/v1/user/delete/12412cdb-398f-4def-9cec-325b11968b57")
+            Utils.makeDeleteRequest("/api/v1/user/delete/12412cdb-398f-4def-9cec-325b11968b57", token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isNotFound)
@@ -111,7 +119,7 @@ class RestApiImplTest {
     @Test
     fun deleteUserBad2() {
         this.mvc.perform(
-            Utils.makeDeleteRequest("/api/v1/user/delete/111")
+            Utils.makeDeleteRequest("/api/v1/user/delete/111", token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isBadRequest)
@@ -120,7 +128,7 @@ class RestApiImplTest {
     @Test
     fun editUserGood() {
         this.mvc.perform(
-            Utils.makePostRequest("/api/v1/user/edit", UserData("12412cdb-398f-4def-9cec-325b11968b56", "newuname", "email"))
+            Utils.makePostRequest("/api/v1/user/edit", UserData("12412cdb-398f-4def-9cec-325b11968b56", "newuname", "email"), token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isOk)
@@ -129,7 +137,7 @@ class RestApiImplTest {
     @Test
     fun editUserBad() {
         this.mvc.perform(
-            Utils.makePostRequest("/api/v1/user/edit", UserData("12412cdb-398f-4def-9cec-325b11968b56", "user", "email"))
+            Utils.makePostRequest("/api/v1/user/edit", UserData("12412cdb-398f-4def-9cec-325b11968b56", "user", "email"), token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isConflict)
@@ -138,7 +146,7 @@ class RestApiImplTest {
     @Test
     fun editUserBad2() {
         this.mvc.perform(
-            Utils.makePostRequest("/api/v1/user/edit", UserData("12412cdb-398f-4def-9cec-325b11968b57", "user", "email"))
+            Utils.makePostRequest("/api/v1/user/edit", UserData("12412cdb-398f-4def-9cec-325b11968b57", "user", "email"), token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isNotFound)
@@ -147,7 +155,7 @@ class RestApiImplTest {
     @Test
     fun editUserBad3() {
         this.mvc.perform(
-            Utils.makePostRequest("/api/v1/user/edit", UserData("1", "user", "email"))
+            Utils.makePostRequest("/api/v1/user/edit", UserData("1", "user", "email"), token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isBadRequest)
@@ -156,7 +164,7 @@ class RestApiImplTest {
     @Test
     fun get() {
         this.mvc.perform(
-            Utils.makeGetRequest("/api/v1/user/get?page=0&limit=2")
+            Utils.makeGetRequest("/api/v1/user/get?page=0&limit=2", token)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isOk)
