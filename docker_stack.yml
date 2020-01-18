@@ -13,17 +13,17 @@ services:
       - frontend
 
   user-service:
-    image: lel9/user_service:latest
+    image: lel9/user-service:latest
     volumes:
       - ~/docker/user_service/logs:/tmp/app
     depends_on:
       - database
-      - redis_service
+      - redis-service
     networks:
       - backend
 
   exam-service:
-    image: lel9/exam_service:latest
+    image: lel9/exam-service:latest
     volumes:
       - ~/docker/exam_service/logs:/tmp/app
     depends_on:
@@ -33,17 +33,17 @@ services:
       - backend
 
   result-service:
-    image: lel9/result_service:latest
+    image: lel9/result-service:latest
     volumes:
       - ~/docker/result_service/logs:/tmp/app
     depends_on:
       - database
-      - redis_service
+      - redis-service
     networks:
       - backend
 
   redis-service:
-    image: lel9/redis_service:latest
+    image: lel9/redis-service:latest
     volumes:
       - ~/docker/redis_service/logs:/tmp/app
     depends_on:
@@ -52,7 +52,7 @@ services:
       - backend
 
   session-service:
-    image: lel9/session_service:latest
+    image: lel9/session-service:latest
     ports:
       - "8085:8085"
     volumes:
@@ -70,11 +70,11 @@ services:
     depends_on:
       - database
       - redis
-      - user_service
-      - exam_service
-      - result_service
-      - redis_service
-      - session_service
+      - user-service
+      - exam-service
+      - result-service
+      - redis-service
+      - session-service
     networks:
       - backend
       - frontend
