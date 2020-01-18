@@ -5,8 +5,6 @@ services:
     image: lel9/frontend:latest
     ports:
       - "3000:3000"
-    volumes:
-      - ~/docker/frontend/logs:/tmp/app
     depends_on:
       - gateway
     networks:
@@ -14,8 +12,6 @@ services:
 
   user-service:
     image: lel9/user-service:latest
-    volumes:
-      - /home/olga/docker/user_service/logs:/tmp/app
     depends_on:
       - database
       - redis-service
@@ -24,8 +20,6 @@ services:
 
   exam-service:
     image: lel9/exam-service:latest
-    volumes:
-      - /home/olga/docker/exam_service/logs:/tmp/app
     depends_on:
       - database
       - redis_service
@@ -34,8 +28,6 @@ services:
 
   result-service:
     image: lel9/result-service:latest
-    volumes:
-      - /home/olga/docker/result_service/logs:/tmp/app
     depends_on:
       - database
       - redis-service
@@ -44,8 +36,6 @@ services:
 
   redis-service:
     image: lel9/redis-service:latest
-    volumes:
-      - /home/olga/docker/redis_service/logs:/tmp/app
     depends_on:
       - queue
     networks:
@@ -55,8 +45,6 @@ services:
     image: lel9/session-service:latest
     ports:
       - "8085:8085"
-    volumes:
-      - /home/olga/docker/session_service/logs:/tmp/app
     depends_on:
       - database
     networks:
@@ -65,8 +53,6 @@ services:
 
   gateway:
     image: lel9/gateway:latest
-    volumes:
-      - ~/docker/gateway/logs:/tmp/app
     depends_on:
       - database
       - redis
